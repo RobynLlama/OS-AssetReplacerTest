@@ -16,16 +16,10 @@ namespace AssetReplacer
     {
         internal static List<Material> initialisedMaterials = [];
         // Returns true on successful patch, false otherwise
-        internal static List<Material> GetMaterials()
+        internal static Material[] materialCache = [];
+        internal static void UpdateMaterialList()
         {
-            List<Material> materialsList = [];
-            Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
-            foreach (Material material in materials)
-            {
-                materialsList.Add((Material)material);
-            }
-
-            return materialsList;
+            materialCache = Resources.FindObjectsOfTypeAll<Material>();
         }
         internal static bool TryReplaceTexture2D(Texture2D ogTexture)
         {
@@ -33,8 +27,6 @@ namespace AssetReplacer
             //This stops nesting bloat
             if (ogTexture is null)
                 return false;
-
-            List<Material> materialsList = GetMaterials();
 
             //This will check for existence and assign all in one
             //Todo: De-nest this by returning early on !TryGetValue instead
@@ -91,7 +83,7 @@ namespace AssetReplacer
                 {
                     Graphics.CopyTexture(tex, ogTexture);
 
-                    foreach (Material material in materialsList)
+                    foreach (Material material in materialCache)
                     {
                         if (material.GetTexture(tex.name))
                         {
