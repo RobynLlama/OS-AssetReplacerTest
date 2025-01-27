@@ -27,7 +27,15 @@ public class Plugin : BaseUnityPlugin
 
     private void Start()
     {
-        string texturesFolderPath = Path.Combine(Assembly.GetExecutingAssembly().Location.Substring(0, Assembly.GetExecutingAssembly().Location.Length - 17), "Texture2D");
+        /*
+        Changes: Path resolution for texture dir
+        Explanation: 
+            The original code simply deleted the last 17 characters from the executing assembly's path
+            so I assumed you wanted the current directory of the current assembly
+            Info.Location always has your plugin's location so it'll work no matter how the user
+            installs it.
+        */
+        string texturesFolderPath = Path.GetFullPath(Path.Combine(Info.Location.Replace(Path.GetFileName(Info.Location), ""), "Texture2D"));
 
         this.patchAssets(texturesFolderPath);
     }
