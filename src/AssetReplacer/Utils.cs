@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +29,10 @@ namespace AssetReplacer
         }
         internal static bool TryReplaceTexture2D(Texture2D ogTexture)
         {
+
+            //This stops nesting bloat
+            if (ogTexture is null)
+                return false;
 
             List<Material> materialsList = GetMaterials();
 
