@@ -18,6 +18,10 @@ namespace AssetReplacer
 
         internal static void LoadTextures()
         {
+
+            //Only update the material list once this frame
+            Utils.UpdateMaterialList();
+
             foreach (string path in TextureModFolders)
             {
                 string textureDir = path;
@@ -45,7 +49,7 @@ namespace AssetReplacer
         private static string getAssetDir(string modName, string assetType)
         {
 
-           return Path.Combine(BepInEx.Paths.PluginPath, modName, assetType);
+            return Path.Combine(BepInEx.Paths.PluginPath, modName, assetType);
         }
     }
 }
