@@ -36,19 +36,18 @@ namespace AssetReplacer
 
             List<Material> materialsList = GetMaterials();
 
-            if (ogTexture is not null)
+            //This will check for existence and assign all in one
+            //Todo: De-nest this by returning early on !TryGetValue instead
+            if (TextureStore.textureDict.TryGetValue(ogTexture.name, out var tex))
             {
-                if (/*!SpriteStore.changedList.Contains(ogSprite) && */TextureStore.textureDict.ContainsKey(ogTexture.name))
+                Plugin.Log.LogInfo("ogTexture.format: " + ogTexture.format);
+                Plugin.Log.LogInfo("tex.format: " + tex.format);
+                if (ogTexture.format != tex.format)
                 {
-                    Texture2D tex = TextureStore.textureDict[ogTexture.name];
-                    Plugin.Log.LogInfo("ogTexture.format: " + ogTexture.format);
-                    Plugin.Log.LogInfo("tex.format: " + tex.format);
-                    if (ogTexture.format != tex.format)
-                    {
-                        Plugin.Log.LogInfo($"INFO! Remaking texture {ogTexture.name}, wants format {ogTexture.format}, have format {tex.format}");
+                    Plugin.Log.LogInfo($"INFO! Remaking texture {ogTexture.name}, wants format {ogTexture.format}, have format {tex.format}");
 
-                        //https://docs.unity3d.com/ScriptReference/Texture2D.SetPixels.html
-                        List<TextureFormat> validFormats = new List<TextureFormat>(){
+                    //https://docs.unity3d.com/ScriptReference/Texture2D.SetPixels.html
+                    List<TextureFormat> validFormats = new List<TextureFormat>(){
                                 TextureFormat.Alpha8,
                                 TextureFormat.ARGB32,
                                 TextureFormat.ARGB4444,
@@ -73,45 +72,44 @@ namespace AssetReplacer
                                 TextureFormat.DXT5
                             };
 
-                        if (validFormats.Contains(ogTexture.format))
-                        {
-                            Texture2D newTex = new Texture2D(tex.width, tex.height, ogTexture.format, 1, false);
-                            newTex.SetPixels(tex.GetPixels());
-                            newTex.Apply();
-
-                            TextureStore.textureDict[ogTexture.name] = newTex;
-                            tex = newTex;
-
-                        }
-                        else
-                        {
-                            Plugin.Log.LogInfo("Failed to remake texture. Invalid format: " + Enum.GetName(typeof(TextureFormat), ogTexture.format));
-                        }
-                    }
-                    if (tex.width == ogTexture.width && tex.height == ogTexture.height && tex.format == ogTexture.format)
+                    if (validFormats.Contains(ogTexture.format))
                     {
-                        Graphics.CopyTexture(tex, ogTexture);
+                        Texture2D newTex = new Texture2D(tex.width, tex.height, ogTexture.format, 1, false);
+                        newTex.SetPixels(tex.GetPixels());
+                        newTex.Apply();
 
-                        foreach (Material material in materialsList)
-                        {
-                            if (material.GetTexture(tex.name))
-                            {
-                                material.SetTexture(tex.name, tex);
-                            }
-                        }
+                        TextureStore.textureDict[ogTexture.name] = newTex;
+                        tex = newTex;
 
-                        Plugin.Log.LogInfo("OK! Replaced Texture " + ogTexture.name);
-                        return true;
                     }
                     else
                     {
-                        Plugin.Log.LogError($"TEST Failed to replace texture {ogTexture.name} because of dimension or format mismatch. Original Texture: {ogTexture.width}w x {ogTexture.height}h {Enum.GetName(typeof(TextureFormat), ogTexture.format)}, Replacement Texture: {tex.width}w x {tex.height}h {Enum.GetName(typeof(TextureFormat), tex.format)}");
+                        Plugin.Log.LogInfo("Failed to remake texture. Invalid format: " + Enum.GetName(typeof(TextureFormat), ogTexture.format));
                     }
+                }
+                if (tex.width == ogTexture.width && tex.height == ogTexture.height && tex.format == ogTexture.format)
+                {
+                    Graphics.CopyTexture(tex, ogTexture);
+
+                    foreach (Material material in materialsList)
+                    {
+                        if (material.GetTexture(tex.name))
+                        {
+                            material.SetTexture(tex.name, tex);
+                        }
+                    }
+
+                    Plugin.Log.LogInfo("OK! Replaced Texture " + ogTexture.name);
+                    return true;
                 }
                 else
                 {
-                    Plugin.Log.LogDebug("FAIL! No Texture available for " + ogTexture.name);
+                    Plugin.Log.LogError($"TEST Failed to replace texture {ogTexture.name} because of dimension or format mismatch. Original Texture: {ogTexture.width}w x {ogTexture.height}h {Enum.GetName(typeof(TextureFormat), ogTexture.format)}, Replacement Texture: {tex.width}w x {tex.height}h {Enum.GetName(typeof(TextureFormat), tex.format)}");
                 }
+            }
+            else
+            {
+                Plugin.Log.LogDebug("FAIL! No Texture available for " + ogTexture.name);
             }
             return false;
         }
